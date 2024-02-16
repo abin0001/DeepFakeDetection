@@ -5,6 +5,10 @@ app = Flask(__name__)
 app.secret_key = 'ELVY_1.0' 
 
 @app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/bot')
 def chat():
 
     return render_template('bot.html')
