@@ -1,7 +1,3 @@
-# import DeepFake
-from flask import Flask,render_template,request, redirect, url_for, session,jsonify
-import os
-import cv2
 import gradio as gr
 import torch
 import torch.nn.functional as f
@@ -15,27 +11,26 @@ from pytorch_grad_cam.utils.image import show_cam_on_image
 import warnings
 
 
-app = Flask(__name__)
 
 class Deepfake:
     def __init__(self):
-        self.Device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+        Device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
         self.mtcnn = MTCNN(select_largest=False,
               post_process = False,
-              device=self.Device,
-              ).to(self.Device).eval()
+              device=Device,
+              ).to(Device).eval()
 
         self.model = InceptionResnetV1(
             pretrained="vggface2",
             classify=True,
             num_classes=1,
-            device=self.Device
+            device=Device
         )
 
         self.checkpoint = torch.load("/home/ghost/Downloads/resnetinceptionv1_epoch_32.pth", map_location=torch.device('cpu'))
         self.model.load_state_dict(self.checkpoint['model_state_dict'])
-        self.model.to(self.Device)
+        self.model.to(Device)
 
     def predict(self,input_image: Image.Image):
         """Predict the label of the input_image"""
@@ -74,26 +69,3 @@ class Deepfake:
             }
         return confidences, prediction
 
-
-
-@app.route('/')
-def home():
-    return render_template('index.html')
-
-@app.route("/submit", methods = ['GET', 'POST'])
-def get_hours():
-	if request.method == 'POST':
-		img = request.files['my_image']
-		img_path=os.path.join("ELVY_1.0_SRM_Chatbot/static","image.jpg")
-		img.save(img_path)
-		imgs=cv2.imread(img_path)
-		model=Deepfake()
-		p=model.predict(imgs)
-		
-          
-
-	return render_template("index.html",prediction=p)
-    
-if __name__ == '__main__':
-
-	app.run(debug=True)
